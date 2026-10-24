@@ -302,7 +302,6 @@ const GLITCH_WEIGHTS = Object.assign({
 }, CFG.weights);
 
 function glitch() {
-  if (typeof Sound !== 'undefined') Sound.crackle();
   const kinds = Object.keys(GLITCH_WEIGHTS);
   let r = Math.random() * kinds.reduce((s, k) => s + GLITCH_WEIGHTS[k], 0);
   for (const k of kinds) { r -= GLITCH_WEIGHTS[k]; if (r <= 0) return GLITCHES[k](); }

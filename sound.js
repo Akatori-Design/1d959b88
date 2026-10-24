@@ -1,7 +1,7 @@
 /* Old-computer sound, all synthesised with Web Audio (no audio files):
    - a short, low floppy-disk read when a page opens: the motor spins up, the head seeks and
      steps a few tracks, the motor spins down (no high-pitched sounds while a page opens)
-   - static crackle when the screen glitches (screen.js calls Sound.crackle)
+   - a short burst of static when a page opens
    - a mechanical mouse click on every click
    Browsers only allow sound after the visitor interacts. It is tried on load (Chrome allows it
    once someone has been clicking around the site), otherwise it starts on the first click or
@@ -30,15 +30,6 @@ const Sound = (() => {
     src.start(at, Math.random() * 0.5, length + 0.01);
   }
 
-  function thump(at, freq, length, level) {
-    const o = ac.createOscillator(); o.frequency.value = freq;
-    const g = ac.createGain();
-    g.gain.setValueAtTime(level, at);
-    g.gain.exponentialRampToValueAtTime(0.0001, at + length);
-    o.connect(g).connect(master);
-    o.start(at); o.stop(at + length + 0.01);
-  }
-
   /* ---------- floppy drive ---------- */
 
   // spindle motor: a soft tonal hum (no noise, so nothing wind-like), wobbling at 5 Hz (300 rpm);
@@ -59,10 +50,9 @@ const Sound = (() => {
   const motorOn = at => motor.gain.setTargetAtTime(0.18, at, 0.12);
   const motorOff = at => motor.gain.setTargetAtTime(0, at, 0.35);
 
-  // one head step: a muffled tick and a small thunk from the drive frame (no bright highs)
+  // one head step: a soft, muffled tick (no tonal thump, so nothing clanks)
   function step(at, level = 0.22) {
-    burst(at, 0.01, rand(280, 480), 2, level);
-    thump(at, rand(85, 110), 0.022, level * 0.8);
+    burst(at, 0.01, rand(280, 480), 1, level);
   }
 
   // many steps in a row at a few ms each turns into the drive's buzzy "zzzt" seek
@@ -83,9 +73,11 @@ const Sound = (() => {
     return t + 0.3;
   }
 
-  // page load: a short, busy read
+  // page load: a short burst of static and a short, busy read
   function processing() {
-    if (ac && on) read(ac.currentTime + 0.02, rand(0.8, 1.3));
+    if (!ac || !on) return;
+    crackle();
+    read(ac.currentTime + 0.02, rand(0.8, 1.3));
   }
 
   function start() {
@@ -101,25 +93,19 @@ const Sound = (() => {
 
   /* ---------- clicks and glitches ---------- */
 
-  // mechanical switch: a sharp, high-pitched tick with a little metallic ring, then the release
+  // mechanical switch: a crisp, high snap and its release; plain noise, so no ring or clank
   function click() {
     if (!ac || !on) return;
     const t = ac.currentTime;
-    burst(t, 0.003, 5200, 4, 0.55);            // the snap
-    burst(t + 0.001, 0.008, 2600, 6, 0.18);    // plastic body
-    const ring = ac.createOscillator(); ring.type = 'triangle'; ring.frequency.value = 4100;
-    const rg = ac.createGain();
-    rg.gain.setValueAtTime(0.05, t); rg.gain.exponentialRampToValueAtTime(0.0001, t + 0.014);
-    ring.connect(rg).connect(master); ring.start(t); ring.stop(t + 0.02);
-    burst(t + 0.045, 0.0025, 6200, 4, 0.3);    // the release
+    burst(t, 0.003, 5200, 1.2, 0.5);           // the snap
+    burst(t + 0.045, 0.002, 6000, 1.2, 0.25);  // the release
   }
 
-  // static from a screen glitch (kept quiet for the first 3 s, while the page is opening)
+  // static as a page opens, kept in a lower range (no high-pitched hiss)
   function crackle() {
-    if (!ac || !on || performance.now() < 3000) return;
     const t = ac.currentTime;
-    for (let i = 0, n = 4 + (Math.random() * 10 | 0); i < n; i++)
-      burst(t + Math.random() * 0.18, 0.01 + Math.random() * 0.04, 800 + Math.random() * 3500, 0.8, 0.05 + Math.random() * 0.12);
+    for (let i = 0, n = 6 + (Math.random() * 10 | 0); i < n; i++)
+      burst(t + Math.random() * 0.25, 0.01 + Math.random() * 0.04, 400 + Math.random() * 1600, 0.8, 0.05 + Math.random() * 0.12);
   }
 
   function setOn(v) {
@@ -162,5 +148,5 @@ const Sound = (() => {
     bar.insertBefore(label, bar.lastElementChild);
   });
 
-  return { crackle, get state() { return ac ? ac.state : 'not started'; } };
+  return { get state() { return ac ? ac.state : 'not started'; } };
 })();
