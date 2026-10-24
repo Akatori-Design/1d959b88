@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Articles · PQ Research Labs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="screen.css">
+<style>
+  a.back { text-decoration: none; }
+  a.back:hover, a.back:focus-visible { background: var(--fg); color: var(--screen); text-shadow: none; outline: none; }
+
+  .grid {
+    list-style: none;
+    display: grid; gap: 24px;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+    margin: 16px 0 24px;
+  }
+  .tile { visibility: hidden; }
+  .tile.in { visibility: visible; }
+  .tile a { display: block; color: inherit; text-decoration: none; outline: none; }
+  .thumb {
+    position: relative; overflow: hidden;
+    aspect-ratio: 16 / 9;
+    background: var(--code-bg);
+    border: 2px solid var(--code-bg);
+  }
+  .thumb canvas { display: block; width: 100%; height: 100%; }
+  .tile .title { display: inline-block; margin-top: 8px; font-size: .9em; }
+  .term .tile .when { display: table; margin-top: 4px; font-size: .65em; color: var(--code-fg); text-shadow: none; }
+  .tile.sel .thumb { border-color: var(--fg); box-shadow: var(--glow); }
+  .tile.sel .title { background: var(--fg); color: var(--screen); text-shadow: none; }
+
+  /* thumbnails draw top-down in steps, like a slow connection */
+  .tile.in canvas { animation: scan-in .4s steps(8) both; }
+  @keyframes scan-in { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0); } }
+
+  /* brief thumbnail glitch: a small shift with scanline gaps, no colour */
+  .tile.glitch canvas {
+    transform: translateX(var(--gx));
+    -webkit-mask-image: repeating-linear-gradient(to bottom, #000 0 2px, transparent 2px 3px);
+    mask-image: repeating-linear-gradient(to bottom, #000 0 2px, transparent 2px 3px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tile.in canvas { animation: none; }
+  }
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+
+<div class="screen">
+  <header class="bar">
+    <span>HM-DOS 6.22</span>
+    <span class="opt">C:\LABS\ARTICLES</span>
+    <span id="clock">00:00:00</span>
+  </header>
+  <main class="term scroll" id="term">
+    <div class="line"><a class="hl back" href="index.html">‹ ESC C:\LABS</a></div>
+    <div class="line"><span class="hl" id="sys" data-type=""></span></div>
+    <div class="line"><span class="hl prompt" data-type="C:\LABS\ARTICLES> DIR"></span></div>
+    <ul class="grid" id="grid"></ul>
+    <div class="line" id="end"><span class="hl prompt" data-type="C:\LABS\ARTICLES>"></span></div>
+  </main>
+  <footer class="bar">
+    <span>←↑↓→ SELECT&nbsp;&nbsp;↵ OPEN</span>
+    <span class="opt">ESC=BACK</span>
+    <span>READY</span>
+  </footer>
+</div>
+<div class="roll"></div>
+<div class="crt"></div>
+
+<script>
+  // keep this screen calm: rainbow only along the bottom edge, rare small glitches
+  window.CRT = {
+    density: 1.2,
+    burst: [6000, 9000],
+    jolt: false,
+    edge: 84,
+    weights: { dataBand: .1, streaks: .4, corruptText: 0, mutate: .15, tear: .1, tile: .25 },
+  };
+</script>
+<script src="projects.js"></script>
+<script src="art.js"></script>
+<script>
+// tiles are built before screen.js so its background can lay out around them
+const grid = document.getElementById('grid');
+PROJECTS.forEach((p, i) => {
+  const li = document.createElement('li'); li.className = 'tile';
+  li.innerHTML = `
+    <a href="project.html?id=${p.id}">
+      <div class="thumb"><canvas role="img" aria-label="${p.title} artwork"></canvas></div>
+      <span class="hl title"><span class="key">${String(i + 1).padStart(2, '0')}</span> ${p.title.toUpperCase()}</span>
+      <span class="hl when">${p.when.toUpperCase()}</span>
+    </a>`;
+  grid.appendChild(li);
+  mountArt(li.querySelector('canvas'), p.art, p.id);
+});
+</script>
+<script src="sound.js"></script>
+<script src="screen.js"></script>
+<script>
+const term = document.getElementById('term');
+const cursor = document.createElement('span'); cursor.className = 'cursor';
+
+/* ---------- boot sequence: type the lines, then draw the tiles in ---------- */
+(async () => {
+  document.getElementById('sys').dataset.type = techString();
+  await wait(100);
+  for (const el of term.querySelectorAll('[data-type], .tile')) {
+    if (el.classList.contains('tile')) { el.classList.add('in'); await wait(50); continue; }
+    el.parentElement.append(cursor);
+    await typeInto(el, el.dataset.type, 4);
+    await wait(60);
+  }
+  document.getElementById('end').append(cursor);
+  select(0);
+})();
+
+/* ---------- thumbnail glitch ---------- */
+GLITCHES.tile = () => {
+  const tiles = document.querySelectorAll('.tile.in');
+  if (!tiles.length) return;
+  const t = pick(tiles);
+  t.style.setProperty('--gx', Math.round((Math.random() - .5) * 16) + 'px');
+  t.classList.add('glitch');
+  setTimeout(() => t.classList.remove('glitch'), 70 + Math.random() * 160);
+};
+
+/* ---------- tile selection: arrows, Tab, hover, Enter, Esc ---------- */
+const tiles = () => [...grid.querySelectorAll('.tile')];
+let sel = -1;
+
+function select(i, focus = true) {
+  const list = tiles();
+  if (!list[i]) return;
+  list.forEach((t, j) => t.classList.toggle('sel', j === i));
+  sel = i;
+  if (focus) list[i].querySelector('a').focus({ preventScroll: true });
+  list[i].scrollIntoView({ block: 'nearest' });
+}
+
+// up/down jumps to the nearest tile in the next row, whatever the column count
+function moveVertical(dir) {
+  const list = tiles(), cur = list[sel].getBoundingClientRect();
+  let best = -1, bestScore = Infinity;
+  list.forEach((t, i) => {
+    const r = t.getBoundingClientRect(), dy = (r.top - cur.top) * dir;
+    if (dy < 2) return;
+    const score = Math.round(dy) * 10000 + Math.abs(r.left - cur.left);
+    if (score < bestScore) { bestScore = score; best = i; }
+  });
+  if (best >= 0) select(best);
+}
+
+grid.addEventListener('focusin', e => {
+  const i = tiles().indexOf(e.target.closest('.tile'));
+  if (i >= 0) select(i, false);
+});
+grid.addEventListener('mouseover', e => {
+  const t = e.target.closest('.tile');
+  if (t) select(tiles().indexOf(t), false);
+});
+
+addEventListener('keydown', e => {
+  if (e.key === 'Escape') { location.href = 'index.html'; return; }
+  const list = tiles().filter(t => t.classList.contains('in'));
+  if (!list.length) return;
+  const moves = { ArrowLeft: -1, ArrowRight: 1 };
+  if (e.key in moves) {
+    e.preventDefault();
+    select(sel < 0 ? 0 : Math.min(list.length - 1, Math.max(0, sel + moves[e.key])));
+  } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (sel < 0) select(0); else moveVertical(e.key === 'ArrowDown' ? 1 : -1);
+  } else if (e.key === 'Enter' && sel >= 0 && !tiles()[sel].contains(document.activeElement)) {
+    tiles()[sel].querySelector('a').click();
+  }
+});
+</script>
+</body>
+</html>

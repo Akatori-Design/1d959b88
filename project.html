@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Articles · PQ Research Labs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="screen.css">
+<style>
+  a.back, .next a { text-decoration: none; }
+  a.back:hover, a.back:focus-visible, .next a:hover, .next a:focus-visible {
+    background: var(--fg); color: var(--screen); text-shadow: none; outline: none;
+  }
+
+  .doc { max-width: 960px; margin: 28px 0 32px; }
+  .blk { visibility: hidden; margin: 0 0 18px; font: inherit; }
+  .blk.in { visibility: visible; }
+  .doc p, .doc li, .doc blockquote { font-size: .8em; line-height: 1.4; max-width: 72ch; }
+  .doc strong { font-weight: 700; }
+  .doc .title { margin-bottom: 8px; }
+  .doc .when { font-size: .7em; margin-bottom: 26px; }
+  .doc .h { margin-top: 44px; }
+  .list { list-style: none; }
+  .list li + li { margin-top: 6px; }
+  .quote { margin: 30px 0; padding-left: 14px; border-left: 2px solid var(--code-fg); }
+
+  .shot { margin: 26px 0; }
+  .shot canvas {
+    display: block; width: 100%; height: auto; aspect-ratio: 16 / 9;
+    background: var(--code-bg); border: 2px solid var(--code-bg);
+    clip-path: inset(0 0 100% 0);
+  }
+  /* artwork draws top-down in steps once it scrolls into view */
+  .shot.in.seen canvas { animation: scan-in .45s steps(9) both; }
+  @keyframes scan-in { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0); } }
+  .shot.glitch canvas {
+    transform: translateX(var(--gx));
+    -webkit-mask-image: repeating-linear-gradient(to bottom, #000 0 2px, transparent 2px 3px);
+    mask-image: repeating-linear-gradient(to bottom, #000 0 2px, transparent 2px 3px);
+  }
+
+  .next { margin-bottom: 8px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shot canvas { clip-path: none; }
+    .shot.in.seen canvas { animation: none; }
+  }
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+
+<div class="screen">
+  <header class="bar">
+    <span>HM-DOS 6.22</span>
+    <span class="opt" id="path">C:\LABS\ARTICLES</span>
+    <span id="clock">00:00:00</span>
+  </header>
+  <main class="term scroll" id="term" tabindex="-1">
+    <div class="line"><a class="hl back" href="work.html">‹ ESC C:\LABS\ARTICLES</a></div>
+    <div class="line"><span class="hl" id="sys"></span></div>
+    <div class="line"><span class="hl prompt" id="cmd"></span></div>
+    <article class="doc" id="doc"></article>
+    <div class="line blk next" id="next"></div>
+    <div class="line" id="end"><span class="hl prompt"></span></div>
+  </main>
+  <footer class="bar">
+    <span>↑↓ SCROLL&nbsp;&nbsp;ESC BACK</span>
+    <span class="opt">N=NEXT</span>
+    <span>READY</span>
+  </footer>
+</div>
+<div class="roll"></div>
+<div class="crt"></div>
+
+<script>
+  // same calm screen as the work page: rainbow only along the bottom edge
+  window.CRT = {
+    density: 1.2,
+    burst: [6000, 9000],
+    jolt: false,
+    edge: 84,
+    weights: { dataBand: .1, streaks: .4, corruptText: 0, mutate: .15, tear: .1, shot: .25 },
+  };
+</script>
+<script src="projects.js"></script>
+<script src="art.js"></script>
+<script src="sound.js"></script>
+<script src="screen.js"></script>
+<script>
+const term = document.getElementById('term');
+const doc = document.getElementById('doc');
+const cursor = document.createElement('span'); cursor.className = 'cursor';
+
+const id = new URLSearchParams(location.search).get('id');
+const index = PROJECTS.findIndex(p => p.id === id);
+const project = PROJECTS[index];
+const next = PROJECTS[(index + 1) % PROJECTS.length];
+// DOS-style 8-character file name, e.g. STATEREU.TXT
+const stem = project ? project.id.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8) : 'UNKNOWN';
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+// **bold** and *italic* inside escaped text
+function inline(text) {
+  const esc = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return esc.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>');
+}
+
+// a block whose text sits in a highlight span, so each wrapped line gets the dark box
+function hlBlock(tag, cls, html) {
+  const e = el(tag, 'blk ' + cls);
+  const span = e.appendChild(el('span', 'hl'));
+  span.innerHTML = html;
+  return e;
+}
+
+/* ---------- render the article's Markdown ----------
+   Covers what the articles use: # title, the category line under it, ![image](src) (shown as live art),
+   ## headings, - bullets, > quotes, **bold** / *italic*, and paragraphs.
+   Everything after the closing --- (the teaser) is left out. */
+function render(md) {
+  const blocks = md.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean);
+  for (const b of blocks) {
+    if (/^---+$/.test(b)) break;
+    if (b.startsWith('# ')) {
+      doc.appendChild(hlBlock('h1', 'title', inline(b.slice(2).toUpperCase())));
+      doc.appendChild(hlBlock('p', 'when', inline(project.when.toUpperCase())));
+    } else if (b === project.when) {
+      continue;   // the category line is already shown under the title
+    } else if (b.startsWith('![')) {
+      // the image is a still of the article's generative piece, so draw the live one instead
+      const [, alt] = b.match(/^!\[([^\]]*)\]/);
+      const fig = el('figure', 'blk shot');
+      const canvas = fig.appendChild(el('canvas'));
+      canvas.setAttribute('role', 'img');
+      canvas.setAttribute('aria-label', `${alt || project.title} artwork`);
+      doc.appendChild(fig);
+      mountArt(canvas, project.art, project.id);
+    } else if (b.startsWith('## ')) {
+      doc.appendChild(hlBlock('h2', 'h', inline('# ' + b.slice(3).toUpperCase())));
+    } else if (b.startsWith('> ')) {
+      doc.appendChild(hlBlock('blockquote', 'quote', inline(b.replace(/^> ?/gm, '').replace(/\n/g, ' '))));
+    } else if (b.startsWith('- ')) {
+      const ul = el('ul', 'blk list');
+      for (const item of b.split(/\n(?=- )/)) {
+        const span = ul.appendChild(el('li')).appendChild(el('span', 'hl'));
+        span.innerHTML = inline('- ' + item.slice(2).replace(/\n/g, ' '));
+      }
+      doc.appendChild(ul);
+    } else {
+      doc.appendChild(hlBlock('p', '', inline(b.replace(/\n/g, ' '))));
+    }
+  }
+}
+
+const io = new IntersectionObserver(entries => entries.forEach(e => {
+  if (e.isIntersecting) { e.target.classList.add('seen'); io.unobserve(e.target); }
+}), { root: term, threshold: 0.1 });
+
+async function build() {
+  if (!project) {
+    doc.appendChild(hlBlock('p', '', inline(`File not found - ${id || 'no article given'}`)));
+    return;
+  }
+  document.title = `${project.title} · PQ Research Labs`;
+  document.getElementById('path').textContent = `C:\\LABS\\ARTICLES\\${stem}`;
+  try {
+    const res = await fetch(ARTICLE_DIR + project.md);
+    if (!res.ok) throw new Error(res.status);
+    render(await res.text());
+  } catch {
+    doc.appendChild(hlBlock('p', '', inline(`Could not read ${stem}.TXT - open the site through a web server, not as a file.`)));
+  }
+  doc.querySelectorAll('.shot').forEach(s => io.observe(s));
+  const link = el('a', 'hl', `[N] NEXT › ${next.title.toUpperCase()}`);
+  link.href = `project.html?id=${next.id}`;
+  document.getElementById('next').appendChild(link);
+}
+
+/* ---------- boot sequence: type the command while the file loads, then print it ---------- */
+(async () => {
+  const built = build();
+  const sys = document.getElementById('sys'), cmd = document.getElementById('cmd');
+  const endPrompt = document.querySelector('#end .prompt');
+  term.focus({ preventScroll: true });   // so the keys below scroll the file
+  await wait(100);
+  for (const [e, text] of [[sys, techString()], [cmd, `C:\\LABS\\ARTICLES> TYPE ${stem}.TXT`]]) {
+    e.parentElement.append(cursor);
+    await typeInto(e, text, 4);
+    await wait(60);
+  }
+  await built;
+  for (const b of term.querySelectorAll('.blk')) { b.classList.add('in'); await wait(12); }
+  document.getElementById('end').append(cursor);
+  await typeInto(endPrompt, 'C:\\LABS\\ARTICLES>', 4);
+})();
+
+/* ---------- glitch: an image on screen briefly slips sideways ---------- */
+GLITCHES.shot = () => {
+  const visible = [...doc.querySelectorAll('.shot.seen')].filter(s => {
+    const r = s.getBoundingClientRect();
+    return r.bottom > 0 && r.top < innerHeight;
+  });
+  if (!visible.length) return;
+  const s = pick(visible);
+  s.style.setProperty('--gx', Math.round((Math.random() - .5) * 16) + 'px');
+  s.classList.add('glitch');
+  setTimeout(() => s.classList.remove('glitch'), 70 + Math.random() * 160);
+};
+
+/* ---------- keys: scroll the file, Esc back to the list, N next article ---------- */
+addEventListener('keydown', e => {
+  const page = term.clientHeight * 0.9;
+  const scroll = { ArrowDown: 60, ArrowUp: -60, PageDown: page, PageUp: -page, ' ': e.shiftKey ? -page : page,
+                   Home: -term.scrollHeight, End: term.scrollHeight }[e.key];
+  if (scroll !== undefined) { e.preventDefault(); term.scrollBy({ top: scroll }); }
+  else if (e.key === 'Escape') location.href = 'work.html';
+  else if ((e.key === 'n' || e.key === 'N') && project) location.href = `project.html?id=${next.id}`;
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,160 @@
+/* Shared CRT terminal screen used by every page */
+:root {
+  --screen: #19191a;
+  --fg: #ffffff;
+  --dim: #8d8b84;
+  --code-bg: #0c0c0d;
+  --code-fg: #8d8b84;
+  --glow: 0 0 4px rgba(214, 214, 226, .55), 0 0 12px rgba(214, 214, 226, .18);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+/* selected text turns white on pink, so it reads clearly */
+::selection { color: #fff; background: #e0378f; text-shadow: none; }
+html, body { height: 100%; background: var(--screen); overflow: hidden; }
+/* old-school pixel arrow pointer (12x19 bitmap at 2x): black with a white outline, everywhere including links */
+html, a, button {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='38' viewBox='0 0 12 19' shape-rendering='crispEdges'%3E%3Crect x='0' y='0' width='1' height='1' fill='%23fff'/%3E%3Crect x='0' y='1' width='2' height='1' fill='%23fff'/%3E%3Crect x='0' y='2' width='1' height='1' fill='%23fff'/%3E%3Crect x='1' y='2' width='1' height='1' fill='%23000'/%3E%3Crect x='2' y='2' width='1' height='1' fill='%23fff'/%3E%3Crect x='0' y='3' width='1' height='1' fill='%23fff'/%3E%3Crect x='1' y='3' width='2' height='1' fill='%23000'/%3E%3Crect x='3' y='3' width='1' height='1' fill='%23fff'/%3E%3Crect x='0' y='4' width='1' height='1' fill='%23fff'/%3E%3Crect x='1' y='4' width='3' height='1' fill='%23000'/%3E%3Crect x='4' y='4' width='1' height='1' fill='%23fff'/%3E%3Crect x='0' y='5' width='1' height='1' fill='%23fff'/%3E%3Crect x='1' y='5' width='4' height='1' fill='%23000'/%3E%3Crect x='5' y='5' width='1' height='1' fill='%23fff'/%3E%3Crect x='0' y='6' width='1' height='1' fill='%23fff'/%3E%3Crect x='1' y='6' width='5' height='1' fill='%23000'/%3E%3Crect x='6' y='6' width='1' height='1' fill='%23fff'/%3E%3Crect x='0' y='7' width='1' height='1' fill='%23fff'/%3E%3Crect x='1' y='7' width='6' height='1' fill='%23000'/%3E%3Crect x='7' y='7' width='1' height='1' fill='%23fff'/%3E%3Crect x='0' y='8' width='1' height='1' fill='%23fff'/%3E%3Crect x='1' y='8' width='7' height='1' fill='%23000'/%3E%3Crect x='8' y='8' width='1' height='1' fill='%23fff'/%3E%3Crect x='0' y='9' width='1' height='1' fill='%23fff'/%3E%3Crect x='1' y='9' width='8' height='1' fill='%23000'/%3E%3Crect x='9' y='9' width='1' height='1' fill='%23fff'/%3E%3Crect x='0' y='10' width='1' height='1' fill='%23fff'/%3E%3Crect x='1' y='10' width='9' height='1' fill='%23000'/%3E%3Crect x='10' y='10' width='1' height='1' fill='%23fff'/%3E%3Crect x='0' y='11' width='1' height='1' fill='%23fff'/%3E%3Crect x='1' y='11' width='6' height='1' fill='%23000'/%3E%3Crect x='7' y='11' width='5' height='1' fill='%23fff'/%3E%3Crect x='0' y='12' width='1' height='1' fill='%23fff'/%3E%3Crect x='1' y='12' width='3' height='1' fill='%23000'/%3E%3Crect x='4' y='12' width='1' height='1' fill='%23fff'/%3E%3Crect x='5' y='12' width='2' height='1' fill='%23000'/%3E%3Crect x='7' y='12' width='1' height='1' fill='%23fff'/%3E%3Crect x='0' y='13' width='1' height='1' fill='%23fff'/%3E%3Crect x='1' y='13' width='2' height='1' fill='%23000'/%3E%3Crect x='3' y='13' width='2' height='1' fill='%23fff'/%3E%3Crect x='5' y='13' width='2' height='1' fill='%23000'/%3E%3Crect x='7' y='13' width='1' height='1' fill='%23fff'/%3E%3Crect x='0' y='14' width='1' height='1' fill='%23fff'/%3E%3Crect x='1' y='14' width='1' height='1' fill='%23000'/%3E%3Crect x='2' y='14' width='1' height='1' fill='%23fff'/%3E%3Crect x='4' y='14' width='1' height='1' fill='%23fff'/%3E%3Crect x='5' y='14' width='2' height='1' fill='%23000'/%3E%3Crect x='7' y='14' width='1' height='1' fill='%23fff'/%3E%3Crect x='0' y='15' width='2' height='1' fill='%23fff'/%3E%3Crect x='4' y='15' width='1' height='1' fill='%23fff'/%3E%3Crect x='5' y='15' width='2' height='1' fill='%23000'/%3E%3Crect x='7' y='15' width='1' height='1' fill='%23fff'/%3E%3Crect x='0' y='16' width='1' height='1' fill='%23fff'/%3E%3Crect x='5' y='16' width='1' height='1' fill='%23fff'/%3E%3Crect x='6' y='16' width='2' height='1' fill='%23000'/%3E%3Crect x='8' y='16' width='1' height='1' fill='%23fff'/%3E%3Crect x='5' y='17' width='1' height='1' fill='%23fff'/%3E%3Crect x='6' y='17' width='2' height='1' fill='%23000'/%3E%3Crect x='8' y='17' width='1' height='1' fill='%23fff'/%3E%3Crect x='6' y='18' width='2' height='1' fill='%23fff'/%3E%3C/svg%3E") 1 1, default;
+}
+body {
+  font-family: "VT323", "Menlo", "Consolas", monospace;
+  color: var(--fg);
+  -webkit-font-smoothing: none;
+  font-variant-ligatures: none;   /* VT323's fi/fl ligatures read as "felds" */
+}
+canvas#bg { position: fixed; inset: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+
+/* ---------- screen chrome ---------- */
+.screen { position: fixed; inset: 0; display: flex; flex-direction: column; z-index: 2; }
+.bar {
+  display: flex; justify-content: space-between; gap: 16px;
+  color: var(--code-fg);
+  font-size: clamp(16px, 1.9vw, 22px); line-height: 1;
+  padding: 6px 12px; white-space: nowrap; overflow: hidden;
+}
+.bar span { flex-shrink: 0; background: var(--code-bg); padding: 3px 8px; }
+.bar .opt { display: inline; }
+@media (max-width: 640px) { .bar .opt { display: none; } }
+
+.term {
+  flex: 1; overflow: hidden;
+  padding: clamp(16px, 4vw, 48px) clamp(16px, 5vw, 64px);
+  font-size: clamp(20px, 2.4vw, 28px);
+  line-height: 1.25;
+}
+/* all text is grey; only the name and links are white and glow */
+.term .name, .term a, .term a .hl { color: var(--fg); text-shadow: var(--glow); }
+/* scrolling pages stop short of the rainbow strip along the bottom edge */
+.term.scroll {
+  overflow-y: auto; outline: none; margin-bottom: 48px;
+  scrollbar-width: thin; scrollbar-color: var(--code-fg) transparent;
+}
+.line { display: block; min-height: 1.25em; white-space: pre-wrap; word-break: break-all; }
+.line + .line { margin-top: 2px; }
+.hl {
+  background: var(--code-bg); color: var(--code-fg);
+  padding: 1px 8px;
+  box-decoration-break: clone; -webkit-box-decoration-break: clone;
+}
+[data-type]:empty { display: none; }
+.prompt { color: var(--dim); }
+.cursor {
+  display: inline-block; width: .55em; height: 1em; vertical-align: -0.12em;
+  background: var(--fg); box-shadow: var(--glow);
+  animation: blink 1.06s steps(1) infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ---------- CRT overlay ---------- */
+.crt {
+  position: fixed; inset: 0; pointer-events: none; z-index: 5;
+  /* low-res pixel grid: thin dark columns that, with the scanlines below, cut the screen into
+     3x3 cells, plus a faint red/green/blue shadow-mask stripe */
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, .26) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(255, 60, 60, .035) 0 1px, rgba(60, 255, 90, .035) 1px 2px, rgba(70, 110, 255, .035) 2px 3px);
+}
+/* faint grain over the whole screen, shifting all the time */
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: 5; pointer-events: none;
+  background: var(--screen-noise) 0 0 / 160px; image-rendering: pixelated;
+  opacity: .06; mix-blend-mode: screen;
+  animation: tv-noise .6s steps(1) infinite;
+}
+.crt::before {
+  content: ""; position: absolute; inset: 0;
+  background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, .22) 0 1px, transparent 1px 3px);
+}
+.crt::after {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, .75) 100%);
+  animation: flicker .12s steps(2) infinite;
+}
+@keyframes flicker { 50% { opacity: .97; } }
+/* faded bottom of an aged screen (色褪せ): whatever sits behind it is washed out and slightly red-tinted,
+   blending away upward. It starts just above the rainbow strip (--edge, set by screen.js) and
+   sits under the right-side lines, so the rainbow and the lines keep their full colour. */
+body::after {
+  content: ""; position: fixed; left: 0; right: 0; bottom: var(--edge, 0px); height: 38vh;
+  z-index: 3; pointer-events: none;
+  background: linear-gradient(to top, rgba(215, 90, 80, .08), transparent);
+  -webkit-backdrop-filter: saturate(.35) sepia(.4) hue-rotate(-18deg) contrast(.8) brightness(1.1);
+  backdrop-filter: saturate(.35) sepia(.4) hue-rotate(-18deg) contrast(.8) brightness(1.1);
+  -webkit-mask-image: linear-gradient(to top, #000 15%, transparent);
+  mask-image: linear-gradient(to top, #000 15%, transparent);
+}
+.roll {
+  position: fixed; left: 0; right: 0; height: 18vh; z-index: 4; pointer-events: none;
+  background: linear-gradient(to bottom, transparent, rgba(214, 214, 226, .05), transparent);
+  animation: roll 7s linear infinite;
+}
+@keyframes roll { from { top: -20vh; } to { top: 110vh; } }
+
+/* ---------- text glitches ---------- */
+body.jolt .term { transform: translateX(var(--jx)); }
+body.jolt .name { text-shadow: 2px 0 #ff2fd0, -2px 0 #00f0ff; }
+body.jolt .bar { transform: translateX(calc(var(--jx) * -1)); }
+.line.corrupt { transform: translateX(var(--gx)); }
+#term .line.corrupt .hl, #term .line.corrupt .hl * { color: transparent; text-shadow: none; }
+#term .line.corrupt .hl { background: var(--stripes); }
+
+/* ---------- old-TV picture for the article artwork (art.js puts .tv on each canvas's box) ---------- */
+.tv { position: relative; overflow: hidden; }
+/* glass: a white band rolling down, scanlines, a faint phosphor stripe and dark corners */
+.tv::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 2;
+  background:
+    linear-gradient(to bottom, transparent, rgba(255, 255, 255, .05) 45%, rgba(255, 255, 255, .08) 50%, rgba(255, 255, 255, .05) 55%, transparent) 0 -60% / 100% 28% no-repeat,
+    repeating-linear-gradient(to bottom, rgba(0, 0, 0, .34) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(255, 40, 40, .07) 0 1px, rgba(40, 255, 90, .07) 1px 2px, rgba(60, 90, 255, .07) 2px 3px),
+    radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, .6) 100%);
+  animation: tv-wave 9s linear infinite;
+}
+@keyframes tv-wave {
+  from { background-position: 0 -60%, 0 0, 0 0, 0 0; }
+  to   { background-position: 0 160%, 0 0, 0 0, 0 0; }
+}
+/* constant snowy screen noise, jumping every frame-ish */
+.tv::before {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: var(--tv-static) 0 0 / 192px; image-rendering: pixelated;
+  opacity: .14; mix-blend-mode: screen;
+  animation: tv-noise .5s steps(1) infinite;
+}
+@keyframes tv-noise {
+  0%   { background-position: 0 0; }
+  20%  { background-position: -37px 61px; }
+  40%  { background-position: 83px -19px; }
+  60%  { background-position: -71px -88px; }
+  80%  { background-position: 29px 47px; }
+}
+/* flicker states, set for a split second by art.js */
+.tv[data-flicker="flash"] canvas { filter: brightness(1.8) contrast(1.4) saturate(.5); }
+.tv[data-flicker="dim"] canvas { filter: brightness(.35); }
+.tv[data-flicker="roll"] canvas { transform: translateY(var(--shift)); }
+.tv[data-flicker="slip"] canvas { transform: translateX(var(--shift)); }
+.tv[data-flicker="static"]::before { opacity: .55; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor, .crt::after, .roll, .tv::before, .tv::after, body::before { animation: none; }
+  .roll { display: none; }
+}

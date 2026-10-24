@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About · PQ Research Labs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="screen.css">
+<style>
+  a.back { text-decoration: none; }
+  a.back:hover, a.back:focus-visible {
+    background: var(--fg); color: var(--screen); text-shadow: none; outline: none;
+  }
+  .doc { max-width: 62ch; margin: 28px 0 32px; }
+  .blk { visibility: hidden; margin: 0 0 18px; }
+  .blk.in { visibility: visible; }
+  .doc .intro { line-height: 1.4; margin-bottom: 18px; }
+  .doc .intro + .note { margin-top: 30px; }
+  .doc .note { font-size: .7em; line-height: 1.5; }
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+
+<div class="screen">
+  <header class="bar">
+    <span>HM-DOS 6.22</span>
+    <span class="opt">C:\LABS\ABOUT</span>
+    <span id="clock">00:00:00</span>
+  </header>
+  <main class="term scroll" id="term">
+    <div class="line"><a class="hl back" href="index.html">‹ ESC C:\LABS</a></div>
+    <div class="line"><span class="hl" id="sys"></span></div>
+    <div class="line"><span class="hl prompt" id="cmd"></span></div>
+    <!-- text from the original P11 Research Labs page -->
+    <article class="doc">
+      <p class="blk intro"><span class="hl">PQ Research Labs is the writing desk where we publish analysis, disclosures and new constructions from the transition to post-quantum cryptography, written for the people building and securing digital assets before Q-Day.</span></p>
+      <p class="blk intro"><span class="hl">All articles are written by Project Eleven, which reserves all rights to them. This is a concept site, made to showcase an immersive reading experience.</span></p>
+      <p class="blk note"><span class="hl" id="count">ARTICLES:</span></p>
+      <p class="blk note"><span class="hl">POST-QUANTUM RESEARCH</span><br><span class="hl">&amp; ENGINEERING</span></p>
+      <p class="blk note"><span class="hl">© 2026</span><br><span class="hl">ALL RIGHTS RESERVED</span></p>
+    </article>
+    <div class="line" id="end"><span class="hl prompt"></span></div>
+  </main>
+  <footer class="bar">
+    <span>ESC BACK</span>
+    <span>READY</span>
+  </footer>
+</div>
+<div class="roll"></div>
+<div class="crt"></div>
+
+<script>
+  // same calm screen as the work page: rainbow only along the bottom edge
+  window.CRT = {
+    density: 1.2,
+    burst: [6000, 9000],
+    jolt: false,
+    edge: 84,
+    weights: { dataBand: .1, streaks: .4, corruptText: 0, mutate: .15, tear: .1 },
+  };
+</script>
+<script src="projects.js"></script>
+<script src="sound.js"></script>
+<script src="screen.js"></script>
+<script>
+const term = document.getElementById('term');
+const cursor = document.createElement('span'); cursor.className = 'cursor';
+document.getElementById('count').textContent = `ARTICLES: ${PROJECTS.length}`;
+
+/* ---------- boot sequence: type the command, then print the file ---------- */
+(async () => {
+  await wait(100);
+  for (const [id, text] of [['sys', techString()], ['cmd', 'C:\\LABS> TYPE ABOUT.TXT']]) {
+    const e = document.getElementById(id);
+    e.parentElement.append(cursor);
+    await typeInto(e, text, 4);
+    await wait(60);
+  }
+  for (const b of term.querySelectorAll('.blk')) { b.classList.add('in'); await wait(40); }
+  document.getElementById('end').append(cursor);
+  await typeInto(document.querySelector('#end .prompt'), 'C:\\LABS>', 4);
+})();
+
+addEventListener('keydown', e => { if (e.key === 'Escape') location.href = 'index.html'; });
+</script>
+</body>
+</html>

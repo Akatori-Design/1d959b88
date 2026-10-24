@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PQ Research Labs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="screen.css">
+<style>
+  .name { display: inline; font: inherit; }
+  a.nav { text-decoration: none; }
+  a.nav:focus { outline: none; }
+  a.nav.sel { background: var(--fg); color: var(--screen); text-shadow: none; }
+  a.nav.sel .key { color: var(--screen); }
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+
+<div class="screen">
+  <header class="bar">
+    <span>HM-DOS 6.22</span>
+    <span id="clock">00:00:00</span>
+  </header>
+  <main class="term" id="term" aria-live="polite"></main>
+  <footer class="bar">
+    <span>↑↓ SELECT&nbsp;&nbsp;↵ OPEN</span>
+    <span>READY</span>
+  </footer>
+</div>
+<div class="roll"></div>
+<div class="crt"></div>
+
+<script>
+  // keep the home screen quiet: rainbow only along the bottom edge, rare small glitches
+  window.CRT = {
+    density: 0.7,
+    burst: [6000, 9000],
+    jolt: false,
+    edge: 70,
+    deadLines: 9,
+    weights: { dataBand: .05, streaks: .4, corruptText: .04, mutate: .2, tear: .1, deadLineFlash: .15 },
+  };
+</script>
+<script src="sound.js"></script>
+<script src="screen.js"></script>
+<script>
+/* ---------- terminal typing ---------- */
+const lines = [
+  { type: 'code', text: techString() },
+  { type: 'name', text: 'PQ RESEARCH LABS' },
+  { type: 'link', key: '[1] ', text: 'ARTICLES', href: 'work.html' },
+  { type: 'link', key: '[2] ', text: 'ABOUT', href: 'about.html' },
+  { type: 'link', key: '[3] ', text: 'GET IN TOUCH', href: 'mailto:hm@projecteleven.com' },
+];
+
+const term = document.getElementById('term');
+const cursor = document.createElement('span'); cursor.className = 'cursor';
+
+function newLine() {
+  const row = document.createElement('div'); row.className = 'line';
+  term.appendChild(row); return row;
+}
+
+(async () => {
+  await wait(150);
+  for (const l of lines) {
+    const row = newLine();
+    let el, target;
+    if (l.type === 'code') { el = target = document.createElement('span'); el.className = 'hl'; }
+    else if (l.type === 'name') { el = target = document.createElement('h1'); el.className = 'hl name'; }
+    else {
+      el = document.createElement('a'); el.className = 'nav hl'; el.href = l.href;
+      const key = document.createElement('span'); key.className = 'key'; key.textContent = l.key;
+      target = document.createElement('span');
+      el.append(key, target);
+    }
+    row.append(el, cursor);
+    await typeInto(target, l.text, l.type === 'code' ? 4 : 16);
+    await wait(l.type === 'code' ? 150 : 50);
+  }
+  const row = newLine();
+  const p = document.createElement('span'); p.className = 'prompt hl'; p.textContent = 'C:\\LABS>';
+  row.append(p, cursor);
+  select(0);
+})();
+
+/* ---------- menu selection: arrows, Tab, hover, Enter, number keys ---------- */
+const navLinks = () => [...term.querySelectorAll('a.nav')];
+let sel = -1;
+
+function select(i, focus = true) {
+  const links = navLinks();
+  if (!links[i]) return;
+  links.forEach((a, j) => a.classList.toggle('sel', j === i));
+  sel = i;
+  if (focus) links[i].focus({ preventScroll: true });
+}
+
+term.addEventListener('focusin', e => {
+  const i = navLinks().indexOf(e.target);
+  if (i >= 0) select(i, false);
+});
+term.addEventListener('mouseover', e => {
+  const a = e.target.closest('a.nav');
+  if (a) select(navLinks().indexOf(a));
+});
+
+addEventListener('keydown', e => {
+  const links = navLinks();
+  if (!links.length) return;
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    const d = e.key === 'ArrowDown' ? 1 : -1;
+    select(sel < 0 ? 0 : (sel + d + links.length) % links.length);
+  } else if (e.key === 'Enter' && document.activeElement !== links[sel] && links[sel]) {
+    links[sel].click();
+  } else if (/^[1-9]$/.test(e.key)) {
+    links[+e.key - 1]?.click();
+  }
+});
+</script>
+</body>
+</html>
