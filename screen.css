@@ -124,8 +124,8 @@ body.jolt .bar { transform: translateX(calc(var(--jx) * -1)); }
   content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 2;
   background:
     linear-gradient(to bottom, transparent, rgba(255, 255, 255, .05) 45%, rgba(255, 255, 255, .08) 50%, rgba(255, 255, 255, .05) 55%, transparent) 0 -60% / 100% 28% no-repeat,
-    repeating-linear-gradient(to bottom, rgba(0, 0, 0, .34) 0 1px, transparent 1px 3px),
-    repeating-linear-gradient(90deg, rgba(255, 40, 40, .07) 0 1px, rgba(40, 255, 90, .07) 1px 2px, rgba(60, 90, 255, .07) 2px 3px),
+    repeating-linear-gradient(to bottom, rgba(0, 0, 0, .14) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(255, 40, 40, .03) 0 1px, rgba(40, 255, 90, .03) 1px 2px, rgba(60, 90, 255, .03) 2px 3px),
     radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, .6) 100%);
   animation: tv-wave 9s linear infinite;
 }
@@ -137,7 +137,7 @@ body.jolt .bar { transform: translateX(calc(var(--jx) * -1)); }
 .tv::before {
   content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
   background: var(--tv-static) 0 0 / 192px; image-rendering: pixelated;
-  opacity: .14; mix-blend-mode: screen;
+  opacity: .06; mix-blend-mode: screen;
   animation: tv-noise .5s steps(1) infinite;
 }
 @keyframes tv-noise {
