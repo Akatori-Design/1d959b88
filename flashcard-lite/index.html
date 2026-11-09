@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FlashCard Lite Support</title>
+<style>
+  :root { --bg:#e8ddcb; --card:#f0e7db; --ink:#1c1810; --sec:#6f6553; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#32364f; --card:#3a3c57; --ink:#f4efe6; --sec:#a9a8bd; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:17px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+  main { max-width:720px; margin:0 auto; padding:48px 16px 64px; }
+  header { display:flex; align-items:center; gap:16px; margin-bottom:24px; }
+  header img { width:72px; height:72px; border-radius:16px; }
+  h1 { font:700 34px/1.2 Georgia, serif; margin:0; }
+  .tag { color:var(--sec); margin:2px 0 0; }
+  h2 { font:700 20px/1.3 Georgia, serif; margin:32px 0 8px; }
+  .card { background:var(--card); border-radius:16px; padding:4px 24px; }
+  dt { font-weight:600; margin-top:16px; }
+  dd { margin:4px 0 16px; }
+  a { color:inherit; }
+  footer { margin-top:48px; color:var(--sec); font-size:15px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="icon.png" alt="FlashCard Lite app icon">
+    <div>
+      <h1>FlashCard Lite</h1>
+      <p class="tag">Swipe to learn English words, idioms and slang.</p>
+    </div>
+  </header>
+
+  <h2>Support</h2>
+  <p>Need help or found a wrong definition? Email <a href="mailto:hiro.scad@gmail.com">hiro.scad@gmail.com</a> and include the word and what you expected.</p>
+
+  <h2>Questions</h2>
+  <div class="card">
+    <dl>
+      <dt>How does studying work?</dt>
+      <dd>Tap a card to flip it. Swipe right if you knew the word, left if you didn't. Words you know come back after longer and longer gaps; words you miss come back sooner.</dd>
+      <dt>Why does it say “All caught up”?</dt>
+      <dd>Nothing is due for review yet. Tap <em>Study anyway</em> to practise every card now.</dd>
+      <dt>How do I add a word?</dt>
+      <dd>Tap the dictionary button at the top left, search, tap the word, then <em>Add to cards</em>.</dd>
+      <dt>How do I delete cards?</dt>
+      <dd>In the dictionary, swipe a card left, or press and hold to select several and tap the trash.</dd>
+      <dt>Does it work offline?</dt>
+      <dd>Yes. Only words that aren't in the built-in dictionary need the internet to look up.</dd>
+    </dl>
+  </div>
+
+  <footer><a href="privacy.html">Privacy policy</a></footer>
+</main>
+</body>
+</html>
